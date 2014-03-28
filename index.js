@@ -1,22 +1,24 @@
 /** 
  * @Author: David Reinisch
  * @Company: TASTENWERK e.U.
- * @Copyright: 2014 by TASTENWERK
- * @License: Commercial
+ * @License: MIT
  *
  * @Date:   2014-03-28 13:39:44
  *
  * @Last Modified by:   David Reinisch
- * @Last Modified time: 2014-03-28 21:03:36
+ * @Last Modified time: 2014-03-28 21:54:55
  *
- * This source code is not part of the public domain
- * If server side nodejs, it is intendet to be read by
- * authorized staff, collaborator or legal partner of
- * TASTENWERK only
  */
 
 (function () {
 
+  /**
+   *
+   *  @class cgi-body-parser
+   *
+   *
+   *
+   */
   var bodyParser = {};
   var Type = {
     INTEGER: 'integer',
@@ -28,22 +30,14 @@
   var keyValueDelimiter  = '=';
   var delimiter          = '&';
 
-  bodyParser.parseString = function parseString( string, options ){
-    setOptions( options ); 
-    return parse( string );
-  };
-
-  function setOptions( options ){
-    if( options ){
-      if( options.keyValueDelimiter )
-        keyValueDelimiter  = options.keyValueDelimiter;
-      if( options.delimiter )
-        delimiter = options.delimiter;
-    }
-  }
-
-  function parse( string ){
-    var params = getArray( string, delimiter );
+  /**
+   *  Gets a string and the options for the parser
+   *  @method parseString
+   *  @param string { String } a string of a request form with utf8 encoding
+   *  @return { Object } the parsed objectect in JSON format
+   */
+  bodyParser.parseString = function parse( string ){
+    var params = string.split( delimiter );
     var root = {};
 
     params.forEach( function ( keyAndValue ){
@@ -54,54 +48,106 @@
     });
 
     return root;
-  }
+  };
 
-  function addKeyAndValue( rootObject, key, value ){
+  /**
+   *  Adds a key - value pair to the current root objectect.
+   *  The deepth is automaticly given through the keys, 
+   *  also an array. 
+   *  @method addKeyAndValue
+   *  @param root { Object } the root objectect
+   *  @param key { String } the key string
+   *  @param value { String } the value string
+   *  @example
+   *      // this call with depth 1
+   *      addKeyAndValue( {}, 'first', 'foo' )
+   *      // will return:
+   *      // { first: 'foo' }
+   *
+   *      // this call with depth 2
+   *      addKeyAndValue( { first: { 0: 'foo' } }, 'first[bar]', 'foo' )
+   *      // will return:
+   *      // { first: { 0: 'foo', 1: 'bar' } }
+   *
+   *      // this call with an array
+   *      addKeyAndValue( { first: [ 'foo' ] }, 'first[]', 'bar' )
+   *      // will return:
+   *      // { first: [ 'foo', 'bar' ] }
+   */
+  function addKeyAndValue( root, key, value ){
     var keys = getKeys( key );
-    var obj = rootObject;
+    var object = root;
     var isArray =  keys[ keys.length - 1 ].match(/\[\]/) ? true : false;
 
     if( isArray )
-      addArrayValue( keys, obj, value );
+      addArrayValue( keys, object, value );
     else  
-      addValue( keys, obj, value );
+      addValue( keys, object, value );
     
   }
 
-  function addArrayValue( keys, obj, value ){
+  /**
+   *  Adds a value to an array, if the array does not exist it is created
+   *  @method addArrayValue
+   *  @param keys { Array } The keys discribing the position of the value
+   *  @param object { Object } The object holding the values
+   *  @param value { String } The value that shall be added
+   */
+  function addArrayValue( keys, object, value ){
     keys.pop();
     keys.forEach( function( keyName, index ){
-      if( !obj[keyName] )
-        obj[keyName] = {};
+      if( !object[keyName] )
+        object[keyName] = {};
       if( index + 1 === keys.length )
-        if( !( obj[keyName] instanceof Array ) )
-          obj[keyName] = [];
-      obj = obj[keyName];
+        if( !( object[keyName] instanceof Array ) )
+          object[keyName] = [];
+      object = object[keyName];
     });
-    obj.push( parseValueToType( value) );
+    object.push( parseValueToType( value) );
   }
 
-  function addValue( keys, obj, value ){
+  /**
+   *  Adds a value to an object
+   *  @method addValue
+   *  @param keys { Array } The keys discribing the position of the value
+   *  @param object { Object } The object holding the values
+   *  @param value { String } The value that shall be added
+   */
+  function addValue( keys, object, value ){
     keys.forEach( function( keyName, index ){
-      if( !obj[keyName] )
-        obj[keyName] = {};
+      if( !object[keyName] )
+        object[keyName] = {};
       if( index + 1 === keys.length )
-        obj[keyName] = parseValueToType( value );
+        object[keyName] = parseValueToType( value );
       else 
-        obj = obj[keyName];
+        object = object[keyName];
     });
   }
 
-
-  function parseKeys( value ){
-    var keys = value.match(/\[[^\[\]]*\]/g);
-    keys.forEach( function( key, index ){
-      keys[index] = key.replace('[','').replace(']','');
-    });
-
-    return keys;
-  }
-
+  /**
+   *  Returns an array of key values, starting with the lowest depth.
+   *  If the current key is an array key, the last array entry will be
+   *  '[]' to identify the return as an array.
+   *  @method getKeys
+   *  @param values The key values that shall be parsed to an key array
+   *  @return { Array } An array of key values
+   *  @example
+   *      // this call depth 1
+   *      getKeys( 'first' )
+   *      // will return
+   *      // [ 'first' ]
+   *
+   *      // this call with depth 2
+   *      getKeys( 'first[second]' )
+   *      // will return
+   *      // [ 'first', 'second' ]
+   *
+   *      // this call with an array
+   *      getKeys( 'first[]' )
+   *      // will return
+   *      // [ 'first', '[]' ]
+   *
+   */
   function getKeys( values ){
     var keys = [];
     var isArray =  values.match(/\[\]/) ? true : false;
@@ -121,10 +167,27 @@
     return keys;
   }
 
-  function getArray( string, _delimiter ){
-    return string.split( _delimiter );
+  /**
+   *  Produces an array of strings without brackets
+   *  @method parseKeys
+   *  @param value The string with different keys in it
+   *  @return { Array } The array of keys
+   */
+  function parseKeys( value ){
+    var keys = value.match(/\[[^\[\]]*\]/g);
+    keys.forEach( function( key, index ){
+      keys[index] = key.replace('[','').replace(']','');
+    });
+
+    return keys;
   }
 
+  /**
+   *  Returns a value as the correct datatype for JSON
+   *  @method parseValueToType
+   *  @param value { String } The value that shall be parsed
+   *  @return { Object } The parsed Value
+   */
   function parseValueToType( value ){
     switch( getTypeOf( value ) ){
 
@@ -147,6 +210,12 @@
     }
   }
 
+  /**
+   *  Returns the datatype as string, defined in the variable Type
+   *  @method getTypeOf
+   *  @param value { String } The value that shall be checked
+   *  @return { String } Value for type, defined in Type
+   */
   function getTypeOf( value ){
     if( value.match(/(^true$|^false$)/) )
       return Type.BOOLEAN;
