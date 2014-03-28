@@ -4,14 +4,9 @@
   "version": "0.0.1",
   "author": "david reinisch <david.reinisch@tastenwerk.com>",
   "keywords": [
-    "caminio",
-    "website builder",
-    "static site",
-    "generator"
+    "cgi",
+    "body parser"
   ],
-  "dependencies": {
-
-  },
   "devDependencies": {
     "mocha": "~1.15.1",
     "grunt": "~0.4.2",
