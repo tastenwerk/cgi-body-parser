@@ -6,7 +6,7 @@
  * @Date:   2014-03-28 13:39:44
  *
  * @Last Modified by:   David Reinisch
- * @Last Modified time: 2014-03-28 21:54:55
+ * @Last Modified time: 2014-03-28 22:11:52
  *
  */
 
@@ -195,6 +195,7 @@
         return parseInt( value );
 
       case Type.FLOAT:
+        value = value.replace(',', '.');
         return parseFloat( value );
 
       case Type.BOOLEAN: 
