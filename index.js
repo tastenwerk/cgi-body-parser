@@ -6,7 +6,7 @@
  * @Date:   2014-03-28 13:39:44
  *
  * @Last Modified by:   David Reinisch
- * @Last Modified time: 2014-03-28 22:11:52
+ * @Last Modified time: 2014-03-29 18:01:02
  *
  */
 
@@ -37,6 +37,9 @@
    *  @return { Object } the parsed objectect in JSON format
    */
   bodyParser.parseString = function parse( string ){
+    if( !string )
+      return null; 
+    
     var params = string.split( delimiter );
     var root = {};
 
